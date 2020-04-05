@@ -1,5 +1,9 @@
 import os
 import psycopg2
+from bot import bot
+import os
+
+log_chat = os.environ['admin_chat_id']
 
 DATABASE_URL = os.environ['DATABASE_URL']
 
@@ -64,26 +68,30 @@ def insert_condition(table, values, columns=''):
         result = True
     except Exception as e:
         result = False
-        print(e)
+        bot.send_message(chat_id=log_chat,
+                         text='Exception {} in postgres_func at insert_condition func'.format(e)
+                         )
     cur.close()
     conn.close()
     return result
 
 
-def update_condition(table, items, condition = ''):
+def update_condition(table, items, condition=''):
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
     try:
         sql = 'UPDATE {table} SET {items}{condition}'.format(table=table,
-                                                               items=items,
-                                                               condition=' where {} '.format(
-                                                                   condition) if condition else '')
+                                                             items=items,
+                                                             condition=' where {} '.format(
+                                                                 condition) if condition else '')
         cur.execute(sql)
         conn.commit()
         result = True
     except Exception as e:
         result = False
-        print(e)
+        bot.send_message(chat_id=log_chat,
+                         text='Exception {} in postgres_func at update_condition func'.format(e)
+                         )
     cur.close()
     conn.close()
     return result
@@ -98,6 +106,9 @@ def delete_condition(table, condition):
         conn.commit()
         result = True
     except Exception as e:
+        bot.send_message(chat_id=log_chat,
+                         text='Exception {} in postgres_func at delete_condition func'.format(e)
+                         )
         result = False
     cur.close()
     conn.close()
