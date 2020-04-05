@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from postgres_func import insert_condition, select_condition
+from postgres_func import insert_condition, select_condition, update_condition
 
 base_url = 'https://alcomarket.ru'
 
@@ -116,7 +116,6 @@ def parse_one_item(item_soup):
             return True
         else:
             insert_condition('imnotalcocholic', tuple(item_dict.values()), str(tuple(item_dict.keys())).replace("'", ''))
-            print("i'm okey, i'm not alcocholic")
             return True
     except Exception as e:
         return None

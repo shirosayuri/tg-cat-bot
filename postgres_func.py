@@ -4,15 +4,19 @@ import psycopg2
 DATABASE_URL = os.environ['DATABASE_URL']
 
 
-def select_random(table, column,  condition=''):
+def select_random(table, column,  condition='', limit=1):
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
-    sql = 'SELECT {column} FROM {table} {condition} ORDER BY RANDOM() LIMIT 1'\
+    sql = 'SELECT {column} FROM {table} {condition} ORDER BY RANDOM() LIMIT {limit}'\
         .format(column=column,
                 table=table,
-                condition=' where {}'.format(condition) if condition else '')
+                condition=' where {}'.format(condition) if condition else '',
+                limit=limit)
     cur.execute(sql)
-    result = cur.fetchone()
+    if limit == 1:
+        result = cur.fetchone()
+    else:
+        result = cur.fetchall()
     cur.close()
     conn.close()
     return result
@@ -65,6 +69,24 @@ def insert_condition(table, values, columns=''):
     conn.close()
     return result
 
+
+def update_condition(table, items, condition = ''):
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    try:
+        sql = 'UPDATE {table} SET {items}{condition}'.format(table=table,
+                                                               items=items,
+                                                               condition=' where {} '.format(
+                                                                   condition) if condition else '')
+        cur.execute(sql)
+        conn.commit()
+        result = True
+    except Exception as e:
+        result = False
+        print(e)
+    cur.close()
+    conn.close()
+    return result
 
 
 def delete_condition(table, condition):

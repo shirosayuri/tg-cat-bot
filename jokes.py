@@ -22,12 +22,9 @@ def bot_pain_message(message):
 @bot.message_handler(commands=['bashim'])
 def bot_bashim_message(message):
     try:
-        if len(bashim()) < 200:
-            bot.send_message(chat_id=message.chat.id,
-                             text=bashim(),
-                             parse_mode='html').wait()
-        else:
-            raise ValueError
+        bot.send_message(chat_id=message.chat.id,
+                            text=bashim(),
+                            parse_mode='html').wait()
     except Exception as e:
         bot.send_message(chat_id=message.chat.id,
                          text='Что-то не хочет bash.im дружить. Но мне есть что на это сказать!\n\n' +

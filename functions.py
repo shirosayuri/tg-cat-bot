@@ -31,7 +31,8 @@ def bashim():
     for qtext in htmlcode.find_all("div", class_="quote__body"):
         qtext = re.sub('<div class="quote__body">|</div>', "", str(qtext))
         qtext = re.sub('<br/>', "\n", str(qtext))
-        qtexts.append(qtext)
+        if len(qtext) < 200:
+            qtexts.append(qtext)
     return qtexts[randint(0, len(qtexts))].strip()
 
 
