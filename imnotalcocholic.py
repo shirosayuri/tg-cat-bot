@@ -16,7 +16,10 @@ kind_dict = {
     'champagne': 'Шампанское', 'Шампанское':  'champagne',
     'liquors': 'Ликёр или настойка', 'Ликёр или настойка': 'liquors',
     'whiskey': 'Виски', 'Виски': 'whiskey',
-    'brandy': 'Бренди', 'Бренди': 'brandy'
+    'brandy': 'Бренди', 'Бренди': 'brandy',
+    'tequila': 'Текила', 'Текила': 'tequila',
+    'grappa': 'Граппа', 'Граппа': 'grappa',
+    'water': 'Вода', 'Вода': 'water'
 }
 
 
