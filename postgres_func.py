@@ -60,12 +60,18 @@ def insert_condition(table, values, columns=''):
     cur = conn.cursor()
     values_length = '({})'.format(('%s,'*len(values))[0:-1])
     try:
-        sql = 'INSERT INTO {table} {column} VALUES {values_length}'.format(table=table,
-                                                                           column=columns,
-                                                                           values_length=values_length)
-        cur.execute(sql, values)
-        conn.commit()
-        result = True
+        sql = 'SELECT count(*) from {table}'.format(table=table)
+        cur.execute(sql)
+        result = cur.fetchone()
+        if result[0] <= 9500:
+            sql = 'INSERT INTO {table} {column} VALUES {values_length}'.format(table=table,
+                                                                               column=columns,
+                                                                               values_length=values_length)
+            cur.execute(sql, values)
+            conn.commit()
+            result = True
+        else:
+            result = False
     except Exception as e:
         result = False
         bot.send_message(chat_id=log_chat,
