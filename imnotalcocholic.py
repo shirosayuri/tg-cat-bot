@@ -36,7 +36,7 @@ all_country = [i[0] for i in select_condition(table='imnotalcocholic',
                                               column='country',
                                               distinct=True)]
 
-all_prices_dict = {'< 300 р.': [0, 300],
+all_prices_dict = {'< 300 р.': [1, 300],
                    '300 - 700 р.': [300, 700],
                    '700 - 1200 р.': [700, 1200],
                    '1 200 - 2 000 р.': [1200, 2000],
@@ -54,10 +54,7 @@ def start_vine_msg(message):
     # чтобы не потерять его на просторах асинхронного программирования
 
     try:
-        if not select_condition('user_sessions', 'user_id',
-                                "user_id = '{}' and command = 'alcoholic'".format(message.chat.id)):
-            insert_condition(table='user_sessions', values=(str(message.chat.id), 'alcoholic'),
-                             columns='(user_id, command)')
+
         kinds = []
         for i in select_condition(table='imnotalcocholic', column='kind', distinct=True):
             kinds.append(i[0])
@@ -67,6 +64,10 @@ def start_vine_msg(message):
                          parse_mode='Markdown',
                          reply_markup=keyboard(kinds)
                          )
+        if not select_condition('user_sessions', 'user_id',
+                                "user_id = '{}' and command = 'alcoholic'".format(message.chat.id)):
+            insert_condition(table='user_sessions', values=(str(message.chat.id), 'alcoholic'),
+                             columns='(user_id, command)')
     except Exception as e:
         bot.send_message(chat_id=log_chat,
                          text='Exception {} in imnotalcocholic at start_vine_msg func'.format(e)
@@ -190,11 +191,12 @@ def button(button):
         alco_type += ['Любой тип', 'Мне повезёт']
         alco_type = set(alco_type)
 
-        bot.send_message(chat_id=button.message.chat.id,
-                         text='Ты выбрал {}.\nКакого типа?'.format(button.data),
-                         parse_mode='Markdown',
-                         reply_markup=keyboard(alco_type)
-                         )
+        bot.edit_message_text(chat_id=button.message.chat.id,
+                              message_id=button.message.message_id,
+                              text='Ты выбрал {}.\nКакого типа?'.format(button.data),
+                              parse_mode='Markdown',
+                              reply_markup=keyboard(alco_type)
+                              )
     elif button.data in all_types or button.data == 'Любой тип' or button.data.replace(' - ', ', ') in all_types:
         user_session = {}
         user_session[button.message.chat.id] = select_condition('user_sessions',
@@ -222,13 +224,14 @@ def button(button):
             country = [i[0] if i[0] else 'Любая страна' for i in possible_country]
         country += ['Любая страна', 'Мне повезёт']
 
-        bot.send_message(chat_id=button.message.chat.id,
-                         text='Ты выбрал {}, {}. \nИз какой страны?'
-                         .format(user_session[button.message.chat.id]['kind'],
-                                 button.data),
-                         parse_mode='Markdown',
-                         reply_markup=keyboard(country)
-                         )
+        bot.edit_message_text(chat_id=button.message.chat.id,
+                              message_id=button.message.message_id,
+                              text='Ты выбрал {}, {}. \nИз какой страны?'
+                              .format(user_session[button.message.chat.id]['kind'],
+                                      button.data),
+                              parse_mode='Markdown',
+                              reply_markup=keyboard(country)
+                              )
 
     elif button.data in all_country or button.data == 'Любая страна':
         user_session = {}
@@ -265,16 +268,16 @@ def button(button):
         prices += ['Любая стоимость', 'Мне повезёт']
         prices = set(prices)
 
-        bot.send_message(chat_id=button.message.chat.id,
-                         text='Ты выбрал {}, {}, {}. \nВ какой цене?'
-                         .format(user_session[button.message.chat.id]['kind'],
-                                 user_session[button.message.chat.id]['type']
-                                 if user_session[button.message.chat.id]['type']
-                                 else 'Любой тип',
-                                 button.data),
-                         parse_mode='Markdown',
-                         reply_markup=keyboard(prices)
-                         )
+        bot.edit_message_text(chat_id=button.message.chat.id,
+                              message_id=button.message.message_id,
+                              text='Ты выбрал {}, {}, {}. \nВ какой цене?'
+                              .format(user_session[button.message.chat.id]['kind'],
+                                      user_session[button.message.chat.id]['type']
+                                      if user_session[button.message.chat.id]['type']
+                                      else 'Любой тип',
+                                      button.data),
+                              parse_mode='Markdown',
+                              reply_markup=keyboard(prices))
 
     else:
         bot.edit_message_text(chat_id=button.message.chat.id,

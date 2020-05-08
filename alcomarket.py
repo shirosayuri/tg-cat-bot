@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from postgres_func import insert_condition, select_condition, update_condition
 from bot import bot
 import os
+import traceback
 
 log_chat = os.environ['admin_chat_id']
 base_url = 'https://alcomarket.ru'
@@ -55,45 +56,48 @@ def parse_one_item(item_soup):
         title = a_tag.attrs.get('title').replace("'", '`')
         cur_soup = get_current_page(base_url + href)
         all_sets = cur_soup.find_all('div', attrs={'class': 'col-xs-6'})
-        price = cur_soup.find_all('div', attrs={'class': 'price'})[0].find('span').text
+        price = cur_soup.find_all('div', attrs={'class': 'price'})[0].find('span').text if cur_soup.find_all('div', attrs={'class': 'price'}) else '0'
         item_dict = {}
         country, alco_type, sugar, temperature, grape, alcohol, compatibility, taste, old, alco_class, material, color, \
         style, alco_filter, added, distillation = [None for i in range(0, 16)]
         for one_set in all_sets:
             title = title
             item = one_set.text.replace('\t', '').strip().split('\n')
-            if item[0] == 'Страна':
-                country = item[-1].strip()
-            if item[0] == 'Тип':
-                alco_type = item[-1].strip()
-            if item[0] == 'Сахар':
-                sugar = item[-1].strip()
-            if item[0] == 'Подача':
-                temperature = item[-1].strip()
-            if item[0] == 'Сорт винограда':
-                grape = item[-1].strip()
-            if item[0] == 'Алкоголь':
-                alcohol = item[-1].strip()
-            if item[0] == 'Сочетаемость':
-                compatibility = ', '.join(item[1:-1]) if item else ''
-            if item[0] == 'Вкус':
-                taste = ', '.join(item[1:-1]) if item else ''
-            if item[0] == 'Выдержка':
-                old = item[-1].strip()
-            if item[0] == 'Класс':
-                alco_class = item[-1].strip()
-            if item[0] == 'Материал' or item[0] == 'Сырье':
-                material = item[-1].strip()
-            if item[0] == 'Цвет':
-                color = item[-1].strip()
-            if item[0] == 'Стиль':
-                style = item[-1].strip()
-            if item[0] == 'Фильтрация':
-                alco_filter = item[-1].strip()
-            if item[0] == 'Добавки':
-                added = item[-1].strip()
-            if item[0] == 'Дистилляция':
-                distillation = item[-1].strip()
+            if item:
+                if item[0] == 'Страна':
+                    country = item[-1].strip()
+                if item[0] == 'Тип':
+                    alco_type = item[-1].strip()
+                if item[0] == 'Сахар':
+                    sugar = item[-1].strip()
+                if item[0] == 'Подача':
+                    temperature = item[-1].strip()
+                if item[0] == 'Сорт винограда':
+                    grape = item[-1].strip()
+                if item[0] == 'Алкоголь':
+                    alcohol = item[-1].strip()
+                if item[0] == 'Сочетаемость':
+                    compatibility = ', '.join(item[1:-1]) if item else ''
+                if item[0] == 'Вкус':
+                    taste = ', '.join(item[1:-1]) if item else ''
+                if item[0] == 'Выдержка':
+                    old = item[-1].strip()
+                if item[0] == 'Класс':
+                    alco_class = item[-1].strip()
+                if item[0] == 'Материал' or item[0] == 'Сырье':
+                    material = item[-1].strip()
+                if item[0] == 'Цвет':
+                    color = item[-1].strip()
+                if item[0] == 'Стиль':
+                    style = item[-1].strip()
+                if item[0] == 'Фильтрация':
+                    alco_filter = item[-1].strip()
+                if item[0] == 'Добавки':
+                    added = item[-1].strip()
+                if item[0] == 'Дистилляция':
+                    distillation = item[-1].strip()
+            else:
+                break
 
         item_dict.update({'title': title,
                           'country': country,
@@ -124,18 +128,17 @@ def parse_one_item(item_soup):
                 elif item_key == 'price':
                     items_list.append("{} = {}".format(item_key, item))
 
-            update_condition('imnotalcocholic', # table
-                             ', '.join(items_list), # set
-                             "title = '{title}'".format(title=title)) # condition
-            return True
+            return update_condition('imnotalcocholic', # table
+                                    ', '.join(items_list), # set
+                                    "title = '{title}'".format(title=title)) # condition
         else:
-            insert_condition('imnotalcocholic', tuple(item_dict.values()), str(tuple(item_dict.keys())).replace("'", ''))
-            return True
+            return insert_condition('imnotalcocholic', tuple(item_dict.values()), str(tuple(item_dict.keys())).replace("'", ''))
+
     except Exception as e:
         bot.send_message(chat_id=log_chat,
                          text='Exception {} in alcomarket at parse_one_item func'.format(e)
                          )
-        return None
+        traceback.print_exc()
 
 
 def parse_full_page(wine_soup):
@@ -152,13 +155,13 @@ def parse_full_page(wine_soup):
 
 def get_next_page_url(wine_soup):
     try:
-        next_page_href = (wine_soup.find('a', attrs={'title': 'Следующая страница'}).attrs.get('href'))
-        return base_url + next_page_href
+        if wine_soup.find('a', attrs={'title': 'Следующая страница'}):
+            next_page_href = (wine_soup.find('a', attrs={'title': 'Следующая страница'}).attrs.get('href'))
+            return base_url + next_page_href
     except Exception as e:
         bot.send_message(chat_id=log_chat,
                          text='Exception {} in alcomarket at get_next_page_url func'.format(e)
                          )
-        return None
 
 add_urls = ['/catalog/krepkiy-alkogol/', '/catalog/water/', '/catalog/wine/', '/catalog/shampanskoe-i-igristoe/', ]
 full_sh_list = []
